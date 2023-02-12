@@ -14,6 +14,9 @@ class Enemy
 
 		void setPosition( int, int );
 		void getPosition( int&, int& );
+		char getMove(int, int);
+		char getTile();
+
 	private:
 		int _x, _y;
 

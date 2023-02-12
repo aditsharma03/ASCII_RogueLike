@@ -27,7 +27,7 @@ void Player::addExperience( int xp )
 
 	while( _experience > 50 ){
 
-		printf("Leveled UP!!!");
+		printf("Leveled UP!!!\n");
 
 		_experience -= 50;
 

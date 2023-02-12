@@ -39,15 +39,15 @@ void Level::load(int fileNumber, Player &player)
 				player.setPosition(j, i);
 				break;
 			case 'S':
-				_enemies.push_back(Enemy(j, i, "Snake", tile, 1, 3, 1, 10, 10));
+				_enemies.push_back(Enemy(j, i, "Snake", tile, 1, 3, 1, 10, 50));
 				_enemies.back().setPosition(j, i);
 				break;
 			case 'g':
-				_enemies.push_back(Enemy(j, i, "Goblin", tile, 2, 10, 5, 35, 50));
+				_enemies.push_back(Enemy(j, i, "Goblin", tile, 2, 10, 5, 35, 150));
 				_enemies.back().setPosition(j, i);
 				break;
 			case 'O':
-				_enemies.push_back(Enemy(j, i, "Ogree", tile, 4, 20, 20, 200, 500));
+				_enemies.push_back(Enemy(j, i, "Ogree", tile, 4, 20, 40, 200, 500));
 				_enemies.back().setPosition(j, i);
 				break;
 			case 'B':
@@ -124,22 +124,22 @@ void Level::processPlayerInput(Player &player, int targetX, int targetY)
 
 	switch (moveTile)
 	{
-
-	case '#':
-		printf("\nYou ran into a wall");
-		break;
 	case ' ':
 		player.setPosition(targetX, targetY);
 		setTile(targetX, targetY, '@');
 		setTile(playerX, playerY, ' ');
 		break;
-	default:;
+	case '#': break;
+	default:
+		battleMonster(player, targetX, targetY);
 	}
 }
 
 void Level::battleMonster(Player &player, int targetX, int targetY)
 {
 	int enemyX, enemyY;
+	int playerX, playerY;
+	player.getPosition(playerX, playerY );
 	int attackResult;
 
 	for (int i = 0; i < _enemies.size(); i++)
@@ -148,26 +148,33 @@ void Level::battleMonster(Player &player, int targetX, int targetY)
 
 		if (targetX == enemyX && targetY == enemyY)
 		{
-
+			//Player's turn:
 			attackResult = _enemies[i].takeDamage(player.attack());
-			printf("The player attacked the enemy...");
+			printf("The player attacked the enemy...\n");
 
 			if (attackResult != 0)
 			{
 				printf("The enemy died!!!");
-				player.addExperience(attackResult);
+
+				//removing the enemy
+
+				_enemies[i] = _enemies.back();
+				_enemies.pop_back();
+				i--;
+
+				player.addExperience( attackResult );
 				setTile(targetX, targetY, ' ');
 				print();
 				return;
 			}
 
 			// Enemy's turn:
-
+			printf("The enemy attacked the player...\n");
 			attackResult = player.takeDamage(_enemies[i].attack());
 			if (attackResult != 0)
 			{
 				printf("YOU DIED!!!!!");
-				setTile(targetX, targetY, 'X');
+				setTile(playerX, playerY, 'x');
 				print();
 				exit(0);
 			}
@@ -175,3 +182,77 @@ void Level::battleMonster(Player &player, int targetX, int targetY)
 		}
 	}
 }
+
+
+
+
+
+void Level::updateEnemies( Player &player )
+{
+	int playerX, playerY;
+	int enemyX, enemyY;
+
+	player.getPosition( playerX, playerY );
+	
+
+	char aiMove;
+	for( int i=0; i<_enemies.size(); i++ ){
+		_enemies[i].getPosition( enemyX, enemyY);
+		aiMove = _enemies[i].getMove(playerX, playerY);
+
+	switch (aiMove)
+	{
+
+		case 'w':
+			processEnemyInput(player, i, enemyX, enemyY - 1);
+			break;
+		case 's':
+			processEnemyInput(player, i, enemyX, enemyY + 1);
+			break;
+
+		case 'a':
+			processEnemyInput(player, i, enemyX - 1, enemyY);
+			break;
+		case 'd':
+			processEnemyInput(player, i, enemyX + 1, enemyY);
+			break;
+		default:;
+	}
+
+
+		
+	}
+}
+
+
+void Level::processEnemyInput( Player &player, int enemyIndex, int targetX, int targetY)
+{
+	int playerX, playerY;
+	int enemyX, enemyY;
+
+	_enemies[enemyIndex].getPosition( enemyX, enemyY);
+	player.getPosition( playerX, playerY);
+
+	char moveTile = getTile(targetX, targetY);
+
+	switch (moveTile){
+
+		case ' ':
+			_enemies[enemyIndex].setPosition(targetX, targetY);
+			setTile( enemyX, enemyY, ' ');
+			setTile( targetX, targetY, _enemies[enemyIndex].getTile() );
+			break;
+		case '@':
+			battleMonster( player, enemyX, enemyY);
+			break;
+		default:
+			;
+	}
+	
+			
+
+
+	
+	
+}
+
